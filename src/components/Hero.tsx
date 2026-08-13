@@ -5,8 +5,6 @@ import MagneticButton from './MagneticButton';
 import { BUSINESS } from '@/data';
 
 // --- FRAME SEQUENCE CONFIG ---
-// 90 frames extracted at 8fps from the pottery video
-const FRAME_COUNT = 90;
 const getFramePath = (index: number) =>
   `/Banner/frames/frame_${String(index + 1).padStart(4, '0')}.jpg`;
 
@@ -20,8 +18,13 @@ export default function Hero() {
   const [framesLoaded, setFramesLoaded] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
   const [scrollAnimEnabled, setScrollAnimEnabled] = useState(true);
+  
+  // Mobile check state for both Frames and Framer Motion timings
+  const [isMobile, setIsMobile] = useState(false);
+  const [frameCount, setFrameCount] = useState(80);
+  const [frameStep, setFrameStep] = useState(1);
 
-  // --- 0. LOW-END / REDUCED-MOTION FALLBACK ---
+  // --- 0. DEVICE CAPABILITY & MOBILE DETECTION ---
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const lowEndDevice =
@@ -31,31 +34,46 @@ export default function Hero() {
       navigator.hardwareConcurrency < 4;
 
     if (prefersReduced || lowEndDevice) setScrollAnimEnabled(false);
+
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      // Mobile pe sirf 40 frames load hongi, every alternate frame (step 2)
+      setFrameCount(mobile ? 40 : 80);
+      setFrameStep(mobile ? 2 : 1);
+    };
+
+    handleResize(); // Check on mount
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- 1. PRELOAD ALL FRAMES ---
+  // --- 1. PRELOAD FRAMES ---
   useEffect(() => {
     if (!scrollAnimEnabled) return;
 
     let loaded = 0;
     const imgs: HTMLImageElement[] = [];
+    setFramesLoaded(false); // Reset in case of resize
 
-    for (let i = 0; i < FRAME_COUNT; i++) {
+    for (let i = 0; i < frameCount; i++) {
       const img = new window.Image();
-      img.src = getFramePath(i);
+      const actualIndex = i * frameStep; // Skip frames on mobile to cover full video
+      img.src = getFramePath(actualIndex);
+      
       const onDone = () => {
         loaded += 1;
-        setLoadProgress(Math.round((loaded / FRAME_COUNT) * 100));
-        if (loaded === FRAME_COUNT) setFramesLoaded(true);
+        setLoadProgress(Math.round((loaded / frameCount) * 100));
+        if (loaded === frameCount) setFramesLoaded(true);
       };
       img.onload = onDone;
       img.onerror = onDone;
       imgs.push(img);
     }
     imagesRef.current = imgs;
-  }, [scrollAnimEnabled]);
+  }, [scrollAnimEnabled, frameCount, frameStep]);
 
-  // Raw + spring-smoothed scroll progress
+  // Scroll progress logic
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ['start start', 'end end'],
@@ -67,7 +85,7 @@ export default function Hero() {
     restDelta: 0.0005,
   });
 
-  // --- 2. DRAW A SINGLE FRAME ONTO THE CANVAS (object-fit: cover math) ---
+  // --- 2. DRAW FRAME ON CANVAS ---
   const drawFrame = useCallback((index: number) => {
     const canvas = canvasRef.current;
     const img = imagesRef.current[index];
@@ -108,15 +126,15 @@ export default function Hero() {
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
   }, []);
 
-  // --- 3. CONTINUOUS rAF LOOP ---
+  // --- 3. ANIMATION LOOP ---
   useEffect(() => {
     if (!framesLoaded) return;
 
     const animate = () => {
       const progress = smoothProgress.get();
       const frameIndex = Math.min(
-        FRAME_COUNT - 1,
-        Math.max(0, Math.round(progress * (FRAME_COUNT - 1)))
+        frameCount - 1,
+        Math.max(0, Math.round(progress * (frameCount - 1)))
       );
       if (frameIndex !== currentFrameRef.current) {
         currentFrameRef.current = frameIndex;
@@ -129,9 +147,8 @@ export default function Hero() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [framesLoaded, smoothProgress, drawFrame]);
+  }, [framesLoaded, smoothProgress, drawFrame, frameCount]);
 
-  // Draw first frame + redraw on resize
   useEffect(() => {
     if (!framesLoaded) return;
     drawFrame(0);
@@ -140,20 +157,28 @@ export default function Hero() {
     return () => window.removeEventListener('resize', onResize);
   }, [framesLoaded, drawFrame]);
 
-  // --- 4. TEXT SCENE TRANSFORMS ---
+  // --- 4. SCROLL TIMELINES (DESKTOP VS MOBILE) ---
   const textProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.0005 });
 
-  const scene1Opacity = useTransform(textProgress, [0, 0.05, 0.15, 0.2], [1, 1, 0, 0]);
-  const scene1Y = useTransform(textProgress, [0, 0.2], [0, -50]);
+  // DESKTOP: 4 Scenes Timeline
+  const dScene1Op = useTransform(textProgress, [0, 0.05, 0.15, 0.2], [1, 1, 0, 0]);
+  const dScene1Y = useTransform(textProgress, [0, 0.2], [0, -50]);
+  
+  const dScene2Op = useTransform(textProgress, [0.2, 0.25, 0.4, 0.45], [0, 1, 1, 0]);
+  const dScene2Y = useTransform(textProgress, [0.2, 0.25, 0.4, 0.45], [50, 0, 0, -50]);
+  
+  const dScene3Op = useTransform(textProgress, [0.45, 0.5, 0.65, 0.7], [0, 1, 1, 0]);
+  const dScene3Y = useTransform(textProgress, [0.45, 0.5, 0.65, 0.7], [50, 0, 0, -50]);
+  
+  const dScene4Op = useTransform(textProgress, [0.75, 0.8, 1, 1], [0, 1, 1, 1]);
+  const dScene4Y = useTransform(textProgress, [0.75, 0.8], [50, 0]);
 
-  const scene2Opacity = useTransform(textProgress, [0.2, 0.25, 0.4, 0.45], [0, 1, 1, 0]);
-  const scene2Y = useTransform(textProgress, [0.2, 0.25, 0.4, 0.45], [50, 0, 0, -50]);
-
-  const scene3Opacity = useTransform(textProgress, [0.45, 0.5, 0.65, 0.7], [0, 1, 1, 0]);
-  const scene3Y = useTransform(textProgress, [0.45, 0.5, 0.65, 0.7], [50, 0, 0, -50]);
-
-  const scene4Opacity = useTransform(textProgress, [0.75, 0.8, 1, 1], [0, 1, 1, 1]);
-  const scene4Y = useTransform(textProgress, [0.75, 0.8], [50, 0]);
+  // MOBILE: 2 Scenes Timeline (Scene 1 jumps directly to Scene 4 without gap)
+  const mScene1Op = useTransform(textProgress, [0, 0.1, 0.4, 0.5], [1, 1, 0, 0]);
+  const mScene1Y = useTransform(textProgress, [0, 0.5], [0, -50]);
+  
+  const mScene4Op = useTransform(textProgress, [0.5, 0.6, 1, 1], [0, 1, 1, 1]);
+  const mScene4Y = useTransform(textProgress, [0.5, 0.6], [50, 0]);
 
   const layerStyle: React.CSSProperties = {
     willChange: 'transform, opacity',
@@ -161,9 +186,9 @@ export default function Hero() {
   };
 
   return (
-    <section ref={heroRef} className="relative h-[800vh] bg-ink">
-      {/* STICKY CONTAINER */}
+    <section ref={heroRef} className="relative h-[400vh] md:h-[800vh] bg-ink">
       <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
+        
         {/* Preloader */}
         {scrollAnimEnabled && !framesLoaded && (
           <div className="absolute inset-0 z-50 bg-ink flex flex-col items-center justify-center">
@@ -173,7 +198,7 @@ export default function Hero() {
           </div>
         )}
 
-        {/* CANVAS — draws one frame at a time, driven by scroll */}
+        {/* CANVAS */}
         <div className="absolute inset-0">
           {scrollAnimEnabled ? (
             <canvas
@@ -188,7 +213,6 @@ export default function Hero() {
               className="absolute inset-0 w-full h-full object-cover opacity-80"
             />
           )}
-          {/* Dark Overlay for Text Readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-ink/80 opacity-90" />
         </div>
 
@@ -198,7 +222,11 @@ export default function Hero() {
 
         {/* SCENE 1: Intro Text */}
         <motion.div
-          style={scrollAnimEnabled ? { opacity: scene1Opacity, y: scene1Y, ...layerStyle } : {}}
+          style={scrollAnimEnabled ? { 
+            opacity: isMobile ? mScene1Op : dScene1Op, 
+            y: isMobile ? mScene1Y : dScene1Y, 
+            ...layerStyle 
+          } : {}}
           className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4"
         >
           <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
@@ -239,11 +267,11 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* SCENE 2 */}
+        {/* SCENE 2 (Only visible on Desktop) */}
         {scrollAnimEnabled && (
           <motion.div
-            style={{ opacity: scene2Opacity, y: scene2Y, ...layerStyle }}
-            className="absolute inset-0 flex flex-col justify-center pointer-events-none px-6 sm:px-10 md:px-32 items-start"
+            style={{ opacity: dScene2Op, y: dScene2Y, ...layerStyle }}
+            className="absolute inset-0 hidden md:flex flex-col justify-center pointer-events-none px-6 sm:px-10 md:px-32 items-start"
           >
             <span className="text-ivory/30 font-serif italic text-6xl md:text-8xl mb-2">01</span>
             <span className="text-cobalt-light tracking-[0.2em] uppercase text-xs font-semibold mb-3">
@@ -260,11 +288,11 @@ export default function Hero() {
           </motion.div>
         )}
 
-        {/* SCENE 3 */}
+        {/* SCENE 3 (Only visible on Desktop) */}
         {scrollAnimEnabled && (
           <motion.div
-            style={{ opacity: scene3Opacity, y: scene3Y, ...layerStyle }}
-            className="absolute inset-0 flex flex-col justify-center pointer-events-none px-6 sm:px-10 md:px-32 items-end text-right"
+            style={{ opacity: dScene3Op, y: dScene3Y, ...layerStyle }}
+            className="absolute inset-0 hidden md:flex flex-col justify-center pointer-events-none px-6 sm:px-10 md:px-32 items-end text-right"
           >
             <span className="text-ivory/30 font-serif italic text-6xl md:text-8xl mb-2">02</span>
             <span className="text-cobalt-light tracking-[0.2em] uppercase text-xs font-semibold mb-3">
@@ -283,7 +311,11 @@ export default function Hero() {
 
         {/* SCENE 4: Final CTA */}
         <motion.div
-          style={scrollAnimEnabled ? { opacity: scene4Opacity, y: scene4Y, ...layerStyle } : { opacity: 1 }}
+          style={scrollAnimEnabled ? { 
+            opacity: isMobile ? mScene4Op : dScene4Op, 
+            y: isMobile ? mScene4Y : dScene4Y, 
+            ...layerStyle 
+          } : { opacity: 1 }}
           className={scrollAnimEnabled ? 'absolute inset-0 flex flex-col items-center justify-center text-center px-4' : 'hidden'}
         >
           <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] tracking-[0.2em] uppercase text-ivory mb-6">

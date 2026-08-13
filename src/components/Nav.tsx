@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Phone, ArrowUpRight } from 'lucide-react';
+import { Menu, X, Phone, ArrowUpRight, Heart, ShoppingBag } from 'lucide-react';
 import { BUSINESS } from '@/data';
 import MagneticButton from './MagneticButton';
 import { useNav, type PageId } from '@/nav';
+
+// Added Props to accept counts just like your BottomNav
+interface NavProps {
+  cartCount?: number;
+  wishlistCount?: number;
+}
 
 const LINKS: { label: string; page: PageId }[] = [
   { label: 'Collection', page: 'collection' },
@@ -13,7 +19,7 @@ const LINKS: { label: string; page: PageId }[] = [
   { label: 'Contact', page: 'contact' },
 ];
 
-export default function Nav() {
+export default function Nav({ cartCount = 0, wishlistCount = 0 }: NavProps) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { page, navigate } = useNav();
@@ -32,10 +38,15 @@ export default function Nav() {
     };
   }, [open]);
 
+  // --- Navigation Logic ---
   const go = (p: PageId) => {
+    const newPath = p === 'home' ? '/' : `/${p}`;
+    window.history.pushState({}, '', newPath);
+    window.dispatchEvent(new Event('popstate')); 
     navigate(p);
     setOpen(false);
   };
+  // -----------------------------
 
   return (
     <>
@@ -91,9 +102,7 @@ export default function Nav() {
                 <span
                   className={`absolute left-4 right-4 -bottom-0.5 h-px origin-left transition-transform duration-300 ${
                     page === l.page ? 'scale-x-100' : 'scale-x-0 group-hover/link:scale-x-100'
-                  } ${
-                    scrolled || page !== 'home' ? 'bg-cobalt' : 'bg-ivory'
-                  }`}
+                  } ${scrolled || page !== 'home' ? 'bg-cobalt' : 'bg-ivory'}`}
                 />
               </button>
             ))}
@@ -101,6 +110,44 @@ export default function Nav() {
 
           {/* Right side */}
           <div className="flex items-center gap-3 shrink-0">
+            
+            {/* --- DESKTOP WISHLIST & CART ICONS --- */}
+            <div className="hidden lg:flex items-center gap-4 mr-1">
+              <button
+                onClick={() => go('wishlist')}
+                className={`relative flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                  scrolled || page !== 'home' ? 'text-ink/80 hover:text-cobalt' : 'text-ivory/90 hover:text-ivory'
+                }`}
+                aria-label="Wishlist"
+              >
+                <Heart size={20} strokeWidth={1.8} />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-blue-600 px-[4px] text-[9px] font-bold text-white shadow-sm ring-1 ring-ink/90">
+                    {wishlistCount > 99 ? '99+' : wishlistCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => go('cart')}
+                className={`relative flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                  scrolled || page !== 'home' ? 'text-ink/80 hover:text-cobalt' : 'text-ivory/90 hover:text-ivory'
+                }`}
+                aria-label="Cart"
+              >
+                <ShoppingBag size={20} strokeWidth={1.8} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-blue-600 px-[4px] text-[9px] font-bold text-white shadow-sm ring-1 ring-ink/90">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </button>
+              
+              {/* Separator line */}
+              <span className={`h-5 w-px ml-2 transition-colors duration-500 ${scrolled || page !== 'home' ? 'bg-ink-line' : 'bg-white/20'}`}></span>
+            </div>
+            {/* ------------------------------------- */}
+
             <a
               href={`tel:${BUSINESS.phoneHref}`}
               className={`hidden sm:flex items-center gap-1.5 text-sm font-medium transition-colors duration-300 ${

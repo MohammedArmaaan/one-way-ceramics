@@ -40,6 +40,7 @@
 
 @layer components {
   .container-px { @apply px-5 sm:px-8 md:px-12 lg:px-20; }
+  .container-px-category { @apply px-0 sm:px-8 md:px-12 lg:px-20; }
 
   .btn-pill {
     @apply inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-all duration-500 ease-smooth;

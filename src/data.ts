@@ -110,40 +110,74 @@ export const FEATURES = [
 export const CATEGORIES = [
   {
     name: 'Tableware',
-    desc: 'Hand-thrown plates, bowls, cups and serving pieces for everyday use and special occasions.',
-    image:
-      'https://images.pexels.com/photos/3094036/pexels-photo-3094036.jpeg?auto=compress&cs=tinysrgb&w=1000',
-    span: 'lg:col-span-7',
+    desc: 'Plates, bowls, and everyday pieces.',
+    image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?q=80&w=800&auto=format&fit=crop',
+    span: 'col-span-1 lg:col-span-4',
     tall: true,
-    tag: 'Most loved',
-  },
-  {
-    name: 'Vases & Decor',
-    desc: 'Sculptural vases, planters and decorative objects that bring warmth and texture to any space.',
-    image:
-      'https://images.pexels.com/photos/20239419/pexels-photo-20239419.jpeg?auto=compress&cs=tinysrgb&w=1000',
-    span: 'lg:col-span-5',
-    tall: true,
-    tag: 'New arrivals',
-  },
-  {
-    name: 'Handmade Tiles',
-    desc: 'Artisan ceramic tiles for feature walls, backsplashes and floors — made one by one.',
-    image:
-      'https://images.pexels.com/photos/6611251/pexels-photo-6611251.jpeg?auto=compress&cs=tinysrgb&w=1000',
-    span: 'lg:col-span-5',
-    tall: false,
-    tag: 'Made to order',
   },
   {
     name: 'Mugs & Cups',
-    desc: 'Comfortable, characterful mugs for your morning coffee or evening chai — each one unique.',
-    image:
-      'https://images.pexels.com/photos/6611415/pexels-photo-6611415.jpeg?auto=compress&cs=tinysrgb&w=1000',
-    span: 'lg:col-span-7',
-    tall: false,
-    tag: 'Daily use',
+    desc: 'Your daily coffee companions.',
+    image: 'https://images.unsplash.com/photo-1610992015732-2449b76344bc?q=80&w=800&auto=format&fit=crop',
+    span: 'col-span-1 lg:col-span-4',
+    tall: true,
   },
+  {
+    name: 'Vases & Decor',
+    desc: 'Sculptural pieces for your space.',
+    image: 'https://theknottyrope.com/cdn/shop/files/WhiteRibbedEarthenVase_Single_1copy.png?v=1773851208&width=1000',
+    span: 'col-span-1 lg:col-span-4',
+    tall: true,
+  },
+  {
+    name: 'Planters',
+    desc: 'Earthy homes for green friends.',
+    image: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?q=80&w=800&auto=format&fit=crop',
+    span: 'col-span-1 lg:col-span-6',
+    tall: false,
+  },
+  {
+    name: 'Handmade Tiles',
+    desc: 'Artistic surfaces for your walls.',
+    image: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?q=80&w=800&auto=format&fit=crop',
+    span: 'col-span-1 lg:col-span-6',
+    tall: false,
+  },
+  {
+    name: 'Bowls',
+    desc: 'Perfect for soups, salads, and more.',
+    image: 'https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcSXx_rrLCMFKioJD3B6wbKVJiLkdTS0cSlKL1tWhLE_y5Lph1i4eR30TUh2mKhRsDodcQ56HYGHCpzGZzKsDSPg_P6zZ_7XAK1SjqrsQtIrtF3LCZ4P88VATA',
+    span: 'col-span-1 lg:col-span-4',
+    tall: false,
+  },
+  {
+    name: 'Pitchers & Jugs',
+    desc: 'Elegant pouring for every occasion.',
+    image: 'https://m.media-amazon.com/images/I/51jpRZEEKvL._SX679_.jpg',
+    span: 'col-span-1 lg:col-span-4',
+    tall: false,
+  },
+  {
+    name: 'Serving Platters',
+    desc: 'Make your gatherings special.',
+    image: 'https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?q=80&w=800&auto=format&fit=crop',
+    span: 'col-span-1 lg:col-span-4',
+    tall: false,
+  },
+  {
+    name: 'Sculptures',
+    desc: 'Abstract art in ceramic form.',
+    image: 'https://images.unsplash.com/photo-1613904985222-0d534430bdbd?q=80&w=800&auto=format&fit=crop',
+    span: 'col-span-1 lg:col-span-6',
+    tall: true,
+  },
+  {
+    name: 'Candle Holders',
+    desc: 'Set the mood with ambient lighting.',
+    image: 'https://images.unsplash.com/photo-1602928321679-560bb453f190?q=80&w=800&auto=format&fit=crop',
+    span: 'col-span-1 lg:col-span-6',
+    tall: true,
+  }
 ];
 
 export const PROCESS = [
