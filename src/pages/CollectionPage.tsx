@@ -4,11 +4,6 @@ import { ParallaxImage, Reveal } from '@/components/motion';
 import { useNav } from '@/nav';
 
 // Total 10 Categories including "Shop All"
-// Desktop Layout (12-column grid math):
-// Row 1: 8 + 4 = 12 (Height: 500px)
-// Row 2: 4 + 4 + 4 = 12 (Height: 400px)
-// Row 3: 6 + 6 = 12 (Height: 450px)
-// Row 4: 4 + 4 + 4 = 12 (Height: 440px)
 const COLLECTION_CATEGORIES = [
   {
     id: 'all',
@@ -122,7 +117,8 @@ export default function CollectionPage() {
 
       {/* Grid Section */}
       <div className="container-px">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 lg:gap-6">
+        {/* CHANGED: grid-cols-1 se grid-cols-2 kiya gaya hai */}
+        <div className="grid grid-cols-2 lg:grid-cols-12 gap-3 md:gap-4 lg:gap-6">
           {COLLECTION_CATEGORIES.map((c, i) => (
             <motion.button
               key={c.name}
@@ -131,8 +127,8 @@ export default function CollectionPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.8, delay: (i % 3) * 0.1, ease: [0.22, 1, 0.36, 1] }}
-              // Mobile height: 280px | Tablet height: 350px | Desktop height: custom mapped
-              className={`group relative overflow-hidden rounded-2xl lg:rounded-[2rem] text-left h-[280px] md:h-[350px] ${c.span} ${c.desktopHeight}`}
+              // CHANGED: Mobile height h-[200px] की गई है ताकि कार्ड्स ज़्यादा लम्बे न दिखें
+              className={`group relative overflow-hidden rounded-xl md:rounded-2xl lg:rounded-[2rem] text-left h-[200px] md:h-[350px] ${c.span} ${c.desktopHeight}`}
             >
               <ParallaxImage
                 src={c.image}
@@ -144,24 +140,28 @@ export default function CollectionPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-transparent transition-opacity duration-500 group-hover:from-ink" />
               
               {c.tag && (
-                <span className="absolute top-4 left-4 lg:top-6 lg:left-6 rounded-full bg-ivory/90 backdrop-blur px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] font-bold text-ink shadow-sm">
+                // CHANGED: Tag का साइज़ और पोजीशन मोबाइल के लिए एडजस्ट किया गया
+                <span className="absolute top-3 left-3 lg:top-6 lg:left-6 rounded-full bg-ivory/90 backdrop-blur px-2 py-1 lg:px-3 lg:py-1.5 text-[8px] lg:text-[10px] uppercase tracking-[0.15em] font-bold text-ink shadow-sm">
                   {c.tag}
                 </span>
               )}
               
-              <div className="absolute inset-0 p-5 lg:p-10 flex flex-col justify-end">
-                <div className="flex items-end justify-between gap-4">
+              {/* CHANGED: Padding मोबाइल के लिए p-3 की गई */}
+              <div className="absolute inset-0 p-3 md:p-5 lg:p-10 flex flex-col justify-end">
+                <div className="flex items-end justify-between gap-2 md:gap-4">
                   <div className="transform transition-transform duration-500 group-hover:-translate-y-2">
-                    <h3 className="font-sans font-bold text-2xl lg:text-4xl text-ivory tracking-tight leading-tight">
+                    {/* CHANGED: Title साइज़ मोबाइल के लिए text-lg/xl किया गया */}
+                    <h3 className="font-sans font-bold text-lg md:text-2xl lg:text-4xl text-ivory tracking-tight leading-tight">
                       {c.name}
                     </h3>
-                    <p className="mt-2 text-xs lg:text-sm text-ivory/70 max-w-sm leading-relaxed opacity-0 md:opacity-100 line-clamp-2 md:line-clamp-none transition-opacity duration-500 group-hover:text-ivory/90">
+                    <p className="mt-1 md:mt-2 text-[10px] md:text-xs lg:text-sm text-ivory/70 max-w-sm leading-relaxed opacity-0 md:opacity-100 line-clamp-2 md:line-clamp-none transition-opacity duration-500 group-hover:text-ivory/90">
                       {c.desc}
                     </p>
                   </div>
                   
-                  <span className="flex h-10 w-10 lg:h-12 lg:w-12 shrink-0 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-ivory group-hover:bg-cobalt group-hover:border-cobalt group-hover:rotate-45 transition-all duration-500 shadow-lg">
-                    <ArrowUpRight className="w-5 h-5" strokeWidth={2} />
+                  {/* CHANGED: Arrow Button का साइज़ मोबाइल के लिए छोटा किया गया */}
+                  <span className="flex h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 shrink-0 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-ivory group-hover:bg-cobalt group-hover:border-cobalt group-hover:rotate-45 transition-all duration-500 shadow-lg">
+                    <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2} />
                   </span>
                 </div>
               </div>
