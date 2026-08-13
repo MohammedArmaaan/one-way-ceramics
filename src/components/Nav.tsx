@@ -5,7 +5,24 @@ import { BUSINESS } from '@/data';
 import MagneticButton from './MagneticButton';
 import { useNav, type PageId } from '@/nav';
 
-// Added Props to accept counts just like your BottomNav
+// --- Helper to read localStorage counts dynamically ---
+const getStorageCount = (key: string) => {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const itemStr = localStorage.getItem(key);
+    if (!itemStr) return 0;
+    const item = JSON.parse(itemStr);
+    if (new Date().getTime() > item.expiry) {
+      localStorage.removeItem(key);
+      return 0;
+    }
+    return Array.isArray(item.value) ? item.value.length : 0;
+  } catch {
+    return 0;
+  }
+};
+// ------------------------------------------------------
+
 interface NavProps {
   cartCount?: number;
   wishlistCount?: number;
@@ -22,6 +39,11 @@ const LINKS: { label: string; page: PageId }[] = [
 export default function Nav({ cartCount = 0, wishlistCount = 0 }: NavProps) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  
+  // States to hold the live counts
+  const [currentCartCount, setCurrentCartCount] = useState(cartCount);
+  const [currentWishlistCount, setCurrentWishlistCount] = useState(wishlistCount);
+  
   const { page, navigate } = useNav();
 
   useEffect(() => {
@@ -38,7 +60,27 @@ export default function Nav({ cartCount = 0, wishlistCount = 0 }: NavProps) {
     };
   }, [open]);
 
-  // --- Navigation Logic ---
+  // --- Live Sync Logic for Cart & Wishlist ---
+  useEffect(() => {
+    const syncCounts = () => {
+      const localCart = getStorageCount('user_cart');
+      const localWish = getStorageCount('user_wishlist');
+      
+      setCurrentCartCount(localCart > 0 ? localCart : cartCount);
+      setCurrentWishlistCount(localWish > 0 ? localWish : wishlistCount);
+    };
+
+    syncCounts(); // Initial load
+    const interval = setInterval(syncCounts, 500); // Auto-update every 500ms
+    window.addEventListener('storage', syncCounts); // Listen across tabs
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', syncCounts);
+    };
+  }, [cartCount, wishlistCount]);
+  // ---------------------------------------------
+
   const go = (p: PageId) => {
     const newPath = p === 'home' ? '/' : `/${p}`;
     window.history.pushState({}, '', newPath);
@@ -46,7 +88,6 @@ export default function Nav({ cartCount = 0, wishlistCount = 0 }: NavProps) {
     navigate(p);
     setOpen(false);
   };
-  // -----------------------------
 
   return (
     <>
@@ -111,8 +152,8 @@ export default function Nav({ cartCount = 0, wishlistCount = 0 }: NavProps) {
           {/* Right side */}
           <div className="flex items-center gap-3 shrink-0">
             
-            {/* --- DESKTOP WISHLIST & CART ICONS --- */}
-            <div className="hidden lg:flex items-center gap-4 mr-1">
+            {/* --- WISHLIST & CART ICONS --- */}
+            <div className="flex items-center gap-3.5 lg:gap-4 mr-1">
               <button
                 onClick={() => go('wishlist')}
                 className={`relative flex items-center justify-center transition-all duration-300 hover:scale-110 ${
@@ -121,9 +162,9 @@ export default function Nav({ cartCount = 0, wishlistCount = 0 }: NavProps) {
                 aria-label="Wishlist"
               >
                 <Heart size={20} strokeWidth={1.8} />
-                {wishlistCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-blue-600 px-[4px] text-[9px] font-bold text-white shadow-sm ring-1 ring-ink/90">
-                    {wishlistCount > 99 ? '99+' : wishlistCount}
+                {currentWishlistCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-cobalt px-1 text-[9px] font-bold text-white shadow-sm">
+                    {currentWishlistCount > 99 ? '99+' : currentWishlistCount}
                   </span>
                 )}
               </button>
@@ -136,15 +177,15 @@ export default function Nav({ cartCount = 0, wishlistCount = 0 }: NavProps) {
                 aria-label="Cart"
               >
                 <ShoppingBag size={20} strokeWidth={1.8} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-blue-600 px-[4px] text-[9px] font-bold text-white shadow-sm ring-1 ring-ink/90">
-                    {cartCount > 99 ? '99+' : cartCount}
+                {currentCartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-cobalt px-1 text-[9px] font-bold text-white shadow-sm">
+                    {currentCartCount > 99 ? '99+' : currentCartCount}
                   </span>
                 )}
               </button>
               
               {/* Separator line */}
-              <span className={`h-5 w-px ml-2 transition-colors duration-500 ${scrolled || page !== 'home' ? 'bg-ink-line' : 'bg-white/20'}`}></span>
+              <span className={`hidden lg:block h-5 w-px ml-2 transition-colors duration-500 ${scrolled || page !== 'home' ? 'bg-ink-line' : 'bg-white/20'}`}></span>
             </div>
             {/* ------------------------------------- */}
 
